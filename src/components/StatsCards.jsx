@@ -15,7 +15,7 @@ const StatsCards = ({ stats }) => {
                 <CardContent>
                     <div className="text-2xl font-bold text-slate-900">{stats.filesConverted}</div>
                     <p className="text-xs text-slate-500">
-                        +12% from last session
+                        Images and videos this session
                     </p>
                 </CardContent>
             </Card>
@@ -29,7 +29,7 @@ const StatsCards = ({ stats }) => {
                 <CardContent>
                     <div className="text-2xl font-bold text-slate-900">{stats.spaceSaved} MB</div>
                     <p className="text-xs text-slate-500">
-                        Avg. 45% reduction
+                        Original size minus converted size
                     </p>
                 </CardContent>
             </Card>
@@ -43,7 +43,7 @@ const StatsCards = ({ stats }) => {
                 <CardContent>
                     <div className="text-2xl font-bold text-slate-900">{stats.currentBatch}</div>
                     <p className="text-xs text-slate-500">
-                        Images queued
+                        Files queued
                     </p>
                 </CardContent>
             </Card>

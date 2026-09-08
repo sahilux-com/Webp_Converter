@@ -3,12 +3,18 @@ import { Slider } from '@/components/ui/slider';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@radix-ui/react-label';
 
-const QualityControl = ({ quality, setQuality }) => {
+const QualityControl = ({
+    quality,
+    setQuality,
+    title = 'Quality Settings',
+    description = 'Adjust the compression level (0.1 - 1.0)',
+    hint = 'Lower quality results in smaller file sizes but may introduce artifacts.',
+}) => {
     return (
         <Card className="bg-white border-slate-200 shadow-sm">
             <CardHeader>
-                <CardTitle className="text-slate-900">Quality Settings</CardTitle>
-                <CardDescription className="text-slate-500">Adjust the compression level (0.1 - 1.0)</CardDescription>
+                <CardTitle className="text-slate-900">{title}</CardTitle>
+                <CardDescription className="text-slate-500">{description}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
@@ -23,9 +29,7 @@ const QualityControl = ({ quality, setQuality }) => {
                     onValueChange={(vals) => setQuality(vals[0])}
                     className="py-4"
                 />
-                <p className="text-xs text-slate-500">
-                    Lower quality results in smaller file sizes but may introduce artifacts.
-                </p>
+                <p className="text-xs text-slate-500">{hint}</p>
             </CardContent>
         </Card>
     );

@@ -1,17 +1,22 @@
-# WebP Image Converter
+# Media Studio (WebP Converter)
 
-A minimalist, high-performance client-side image converter built with **Vite**, **React**, and **Tailwind CSS**.
+A minimalist, high-performance client-side media converter built with **Vite**, **React 19**, **Tailwind CSS v4** and **shadcn/ui** (New York style, on top of Radix primitives).
 
 ![Screenshot](screenshot_placeholder.png)
 
 ## Features
 
-- **Drag & Drop**: Intuitive file upload.
-- **Client-Side Conversion**: Powered by HTML5 Canvas (Privacy-focused, no server uploads).
-- **Bulk Processing**: Convert multiple images simultaneously.
+- **Images → WebP**: Bulk convert PNG and JPG with a quality slider (HTML5 Canvas).
+- **Video → WebM**: Convert MP4 and MOV clips with `MediaRecorder`, with live per-file
+  progress. Encoding runs in real time (a 1-minute clip takes about a minute) and one
+  clip is processed at a time.
+- **SVG Studio**: Paste SVG code, preview it live on a checker/light/dark background,
+  and download it as `.svg` or a 2x `.png`. Markup is rendered through a blob URL in an
+  `<img>`, so scripts and external references inside pasted SVG stay inert.
+- **Drag & Drop**: Intuitive file upload for both images and video.
 - **ZIP Download**: Download all converted files in a single archive.
-- **Analysis**: See size savings (Original vs WebP size).
-- **Responsive**: Fully responsive dark mode UI.
+- **Analysis**: See size savings (original vs converted size).
+- **Client-Side Only**: Nothing is ever uploaded to a server.
 
 ## Getting Started
 
@@ -42,18 +47,35 @@ A minimalist, high-performance client-side image converter built with **Vite**, 
 
 ## Technology Stack
 
-- **React**: UI Library
-- **Vite**: Build Tool
-- **Tailwind CSS**: Styling
+- **React 19**: UI library
+- **Vite**: Build tool
+- **Tailwind CSS v4**: Styling
+- **shadcn/ui + Radix UI**: Component layer (`components.json`, `src/components/ui`)
+- **lucide-react**: Icons
+- **sonner**: Toasts
 - **JSZip**: Bulk compression
-- **Canvas API**: Image processing
+- **Canvas API**: Image and SVG rasterisation
+- **MediaRecorder API**: Video re-encoding
 
 ## Usage
 
+**Images**
 1. Drag PNG or JPG images into the dashed zone.
-2. Click **Convert All** to start processing.
-3. View the compression stats.
-4. Download individual files or use **Download ZIP** for all.
+2. Click **Start Conversion**.
+3. Download individual files or use **Download All (ZIP)**.
+
+**Video**
+1. Open the **Video** tab and drop MP4 or MOV clips in.
+2. Click **Start Encoding** — progress is shown per clip while it plays back.
+3. Download the resulting `.webm` files individually or as a ZIP.
+
+Browser support: WebM recording needs Chrome, Edge or Firefox. Safari cannot record
+WebM and the tab says so instead of failing silently.
+
+**SVG**
+1. Open the **SVG** tab, paste SVG markup (or use **Open** to load a `.svg` file).
+2. Check the live preview, switch the backdrop, and fix errors reported under the editor.
+3. Name the file and click **Download SVG** (or **PNG** for a 2x raster export).
 
 ## License
 

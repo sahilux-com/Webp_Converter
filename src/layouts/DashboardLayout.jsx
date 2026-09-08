@@ -1,17 +1,26 @@
 import React from 'react';
 import {
+    Clapperboard,
+    FileCode2,
+    ImageIcon,
     LayoutDashboard,
-    Settings,
-    History,
     LogOut,
-    User,
-    Menu
+    Menu,
+    Settings,
+    User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+import { Toaster } from '@/components/ui/sonner';
 
-const DashboardLayout = ({ children }) => {
+const NAV_ITEMS = [
+    { id: 'home', label: 'Discover', icon: LayoutDashboard },
+    { id: 'images', label: 'Images', icon: ImageIcon },
+    { id: 'videos', label: 'Video', icon: Clapperboard },
+    { id: 'svg', label: 'SVG Studio', icon: FileCode2 },
+];
+
+const DashboardLayout = ({ children, activeView = 'home', onNavigate }) => {
     return (
         <div className="flex h-screen bg-slate-50 text-slate-900 overflow-hidden font-sans">
             {/* Sidebar */}
@@ -21,19 +30,25 @@ const DashboardLayout = ({ children }) => {
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
                             <span className="text-white">W</span>
                         </div>
-                        WebP Studio
+                        Media Studio
                     </div>
                 </div>
                 <ScrollArea className="flex-1 px-4 py-6">
                     <nav className="flex flex-col gap-2">
-                        <Button variant="secondary" className="justify-start gap-3 w-full bg-slate-100 text-slate-900 hover:bg-slate-200">
-                            <LayoutDashboard size={18} />
-                            Converter
-                        </Button>
-                        <Button variant="ghost" className="justify-start gap-3 w-full text-slate-600 hover:text-slate-900 hover:bg-slate-100">
-                            <History size={18} />
-                            History
-                        </Button>
+                        {NAV_ITEMS.map(item => (
+                            <Button
+                                key={item.id}
+                                variant={activeView === item.id ? 'secondary' : 'ghost'}
+                                onClick={() => onNavigate?.(item.id)}
+                                className={`justify-start gap-3 w-full ${activeView === item.id
+                                    ? 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                                    }`}
+                            >
+                                <item.icon size={18} />
+                                {item.label}
+                            </Button>
+                        ))}
                         <Button variant="ghost" className="justify-start gap-3 w-full text-slate-600 hover:text-slate-900 hover:bg-slate-100">
                             <Settings size={18} />
                             Settings
@@ -55,7 +70,7 @@ const DashboardLayout = ({ children }) => {
                         <Button variant="ghost" size="icon">
                             <Menu size={20} />
                         </Button>
-                        <span className="font-semibold text-slate-900">WebP Studio</span>
+                        <span className="font-semibold text-slate-900">Media Studio</span>
                     </div>
                     <div className="flex flex-1 justify-end items-center gap-4">
                         <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
@@ -76,6 +91,7 @@ const DashboardLayout = ({ children }) => {
                     </div>
                 </ScrollArea>
             </div>
+            <Toaster position="bottom-right" richColors />
         </div>
     );
 };

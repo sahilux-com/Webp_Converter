@@ -1,144 +1,86 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import StatsCards from '@/components/StatsCards';
-import { DropZone } from '@/components/DropZone';
-import FileTable from '@/components/FileTable';
-import QualityControl from '@/components/QualityControl';
-import { Button } from '@/components/ui/button'; // Adjust based on path
-import { convertToWebP, downloadZip } from './utils/converter';
-import { toast } from 'sonner';
-import { Play } from 'lucide-react';
+import HomeCards from '@/components/HomeCards';
+import ImageConverter from '@/components/ImageConverter';
+import VideoConverter from '@/components/VideoConverter';
+import SvgStudio from '@/components/SvgStudio';
+
+const VIEWS = [
+  { id: 'home', label: 'Discover', heading: 'Discover', subheading: 'Pick a tool to get started.' },
+  { id: 'images', label: 'Images', heading: 'Image Converter', subheading: 'Convert PNG and JPG assets to WebP.' },
+  { id: 'videos', label: 'Video', heading: 'Video Converter', subheading: 'Re-encode MP4 and MOV clips to WebM.' },
+  { id: 'svg', label: 'SVG', heading: 'SVG Studio', subheading: 'Preview SVG code and download the file.' },
+];
+
+const emptyTotals = { filesConverted: 0, savedBytes: 0, queued: 0 };
+
+const totalsFrom = (files) => {
+  const completed = files.filter(f => f.status === 'done');
+  return {
+    filesConverted: completed.length,
+    savedBytes: completed.reduce((acc, curr) => acc + (curr.file.size - (curr.size || 0)), 0),
+    queued: files.length,
+  };
+};
 
 function App() {
-  const [files, setFiles] = useState([]);
-  const [isConverting, setIsConverting] = useState(false);
-  const [quality, setQuality] = useState(0.8);
+  const [view, setView] = useState('home');
+  const [imageTotals, setImageTotals] = useState(emptyTotals);
+  const [videoTotals, setVideoTotals] = useState(emptyTotals);
 
-  useEffect(() => {
-    return () => {
-      files.forEach(file => {
-        if (file.preview) URL.revokeObjectURL(file.preview);
-        if (file.convertedUrl) URL.revokeObjectURL(file.convertedUrl);
-      });
-    };
-  }, []);
-
-  const handleFilesAdded = (newFiles) => {
-    const newFileObjs = newFiles.map(file => ({
-      id: Math.random().toString(36).substr(2, 9),
-      file,
-      preview: URL.createObjectURL(file),
-      status: 'pending',
-      convertedUrl: null,
-      convertedBlob: null
-    }));
-    setFiles(prev => [...prev, ...newFileObjs]);
-    toast.success(`${newFiles.length} file(s) added to queue`);
-  };
-
-  const handleRemove = (id) => {
-    setFiles(prev => {
-      const fileToRemove = prev.find(f => f.id === id);
-      if (fileToRemove?.preview) URL.revokeObjectURL(fileToRemove.preview);
-      if (fileToRemove?.convertedUrl) URL.revokeObjectURL(fileToRemove.convertedUrl);
-      return prev.filter(f => f.id !== id);
-    });
-  };
-
-  const handleConvertAll = async () => {
-    setIsConverting(true);
-    toast.info('Conversion started...');
-
-    const promises = files.map(async (fileObj) => {
-      if (fileObj.status === 'done' || fileObj.status === 'error') return fileObj;
-
-      setFiles(prev => prev.map(f => f.id === fileObj.id ? { ...f, status: 'converting' } : f));
-
-      try {
-        const result = await convertToWebP(fileObj.file, quality); // Pass quality
-        setFiles(prev => prev.map(f => f.id === fileObj.id ? {
-          ...f,
-          status: 'done',
-          convertedUrl: result.url,
-          convertedBlob: result.blob,
-          size: result.size,
-          sizeDisplay: result.sizeDisplay,
-          originalSizeDisplay: result.originalSizeDisplay
-        } : f));
-      } catch (err) {
-        console.error(err);
-        setFiles(prev => prev.map(f => f.id === fileObj.id ? { ...f, status: 'error' } : f));
-        toast.error(`Failed to convert ${fileObj.file.name}`);
-      }
-    });
-
-    await Promise.all(promises);
-    setIsConverting(false);
-    toast.success('All files processed!');
-  };
+  const handleImageStats = useCallback((files) => setImageTotals(totalsFrom(files)), []);
+  const handleVideoStats = useCallback((files) => setVideoTotals(totalsFrom(files)), []);
 
   const stats = useMemo(() => {
-    const completed = files.filter(f => f.status === 'done');
-    const totalFiles = completed.length;
-    const savedBytes = completed.reduce((acc, curr) => {
-      const original = curr.file.size;
-      const converted = curr.size;
-      return acc + (original - converted);
-    }, 0);
-    const savedMB = (savedBytes / (1024 * 1024)).toFixed(2);
-
+    const savedBytes = imageTotals.savedBytes + videoTotals.savedBytes;
     return {
-      filesConverted: totalFiles,
-      spaceSaved: savedMB,
-      currentBatch: files.length
+      filesConverted: imageTotals.filesConverted + videoTotals.filesConverted,
+      spaceSaved: (Math.max(savedBytes, 0) / (1024 * 1024)).toFixed(2),
+      currentBatch: imageTotals.queued + videoTotals.queued,
     };
-  }, [files]);
+  }, [imageTotals, videoTotals]);
+
+  const active = VIEWS.find(v => v.id === view) ?? VIEWS[0];
 
   return (
-    <DashboardLayout>
+    <DashboardLayout activeView={view} onNavigate={setView}>
       <div className="flex flex-col gap-8">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900">Converter Dashboard</h2>
-          <p className="text-slate-500">Manage and convert your image assets.</p>
-        </div>
+        <nav className="flex flex-wrap items-center gap-6 border-b border-slate-200 pb-1">
+          {VIEWS.map(item => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setView(item.id)}
+              className={`-mb-px border-b-2 pb-3 text-2xl font-semibold tracking-tight transition-colors ${view === item.id
+                ? 'border-slate-900 text-slate-900'
+                : 'border-transparent text-slate-400 hover:text-slate-600'
+                }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
 
-        <StatsCards stats={stats} />
-
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-6">
-            <DropZone onFilesAdded={handleFilesAdded} />
-            {files.length > 0 && <FileTable files={files} onRemove={handleRemove} />}
+        {view !== 'home' && (
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900">{active.heading}</h2>
+            <p className="text-slate-500">{active.subheading}</p>
           </div>
+        )}
 
-          <div className="space-y-6">
-            <QualityControl quality={quality} setQuality={setQuality} />
+        {view === 'home' && <HomeCards onNavigate={setView} stats={stats} />}
 
-            <div className="flex flex-col gap-3">
-              <Button
-                size="lg"
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-                onClick={handleConvertAll}
-                disabled={isConverting || files.length === 0}
-              >
-                {isConverting ? 'Processing...' : (
-                  <>
-                    <Play className="mr-2 h-4 w-4" /> Start Conversion
-                  </>
-                )}
-              </Button>
+        {view !== 'home' && view !== 'svg' && <StatsCards stats={stats} />}
 
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full border-slate-300 text-slate-700 hover:bg-slate-100"
-                onClick={() => downloadZip(files)}
-                disabled={files.length === 0 || !files.some(f => f.status === 'done')}
-              >
-                Download All (ZIP)
-              </Button>
-            </div>
-          </div>
+        {/* Both converters stay mounted so queues survive tab switches. */}
+        <div hidden={view !== 'images'}>
+          <ImageConverter onStatsChange={handleImageStats} />
         </div>
+        <div hidden={view !== 'videos'}>
+          <VideoConverter onStatsChange={handleVideoStats} />
+        </div>
+        {view === 'svg' && <SvgStudio />}
       </div>
     </DashboardLayout>
   );
