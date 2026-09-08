@@ -1,12 +1,7 @@
 import JSZip from 'jszip';
+import { formatSize, stripExtension, triggerDownload } from './format';
 
-const formatSize = (bytes) => {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
+export { formatSize, stripExtension, triggerDownload };
 
 export const convertToWebP = (file, quality = 0.8) => {
   return new Promise((resolve, reject) => {
@@ -44,25 +39,18 @@ export const convertToWebP = (file, quality = 0.8) => {
   });
 };
 
-export const downloadZip = async (files) => {
+export const downloadZip = async (files, zipName = 'converted_images.zip') => {
   const zip = new JSZip();
   const convertedFiles = files.filter(f => f.status === 'done' && f.convertedBlob);
 
   if (convertedFiles.length === 0) return;
 
   convertedFiles.forEach(fileObj => {
-    const nameWithoutExt = fileObj.file.name.substring(0, fileObj.file.name.lastIndexOf('.')) || fileObj.file.name;
-    zip.file(`${nameWithoutExt}.webp`, fileObj.convertedBlob);
+    zip.file(`${stripExtension(fileObj.file.name)}.webp`, fileObj.convertedBlob);
   });
 
   const content = await zip.generateAsync({ type: 'blob' });
   const url = URL.createObjectURL(content);
-
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'converted_images.zip';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  triggerDownload(url, zipName);
   URL.revokeObjectURL(url);
 };
